@@ -19,7 +19,7 @@ mongoose
 	});
 
 const userSchema = new mongoose.Schema({
-	name: {
+	username: {
 		type: String,
 		minLength: 3,
 		unique: true,
