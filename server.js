@@ -34,6 +34,13 @@ app.post("/api/exercise/new-user", (req, res, next) => {
 		.catch((error) => next(error));
 });
 
+// GET route to /api/exercise/users returns an array of all users. Each element in the array is an object containing a user's username and _id.
+app.get("/api/exercise/users", (req, res, next) => {
+	User.find({}).then((users) => {
+		res.status(200).json(users);
+	});
+});
+
 const errorHandler = (error, request, response, next) => {
 	console.error(error.message);
 
