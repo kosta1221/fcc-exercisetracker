@@ -25,11 +25,13 @@ const userSchema = new mongoose.Schema({
 		unique: true,
 		required: true,
 	},
+	exercises: [],
 });
 
 userSchema.set("toJSON", {
 	transform: (document, returnedObject) => {
 		delete returnedObject.__v;
+		delete returnedObject.exercises;
 	},
 });
 

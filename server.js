@@ -6,6 +6,7 @@ const app = express();
 const cors = require("cors");
 const User = require("./models/User");
 const mongoose = require("mongoose");
+const utils = require("./utils");
 
 morgan.token("reqbody", (req) => {
 	return JSON.stringify(req.body);
@@ -41,6 +42,36 @@ app.get("/api/exercise/users", (req, res, next) => {
 	});
 });
 
+// POST route to /api/exercise/add for adding a new user with username
+app.post("/api/exercise/add", (req, res, next) => {
+	const { _id } = req.body;
+	const { description } = req.body;
+	const { duration } = req.body;
+	const date = req.body.date || new Date();
+
+	User.findById(_id)
+		.then((foundUser) => {
+			const username = foundUser.username;
+			foundUser.exercises.push({ _id, description, duration, date, username });
+
+			User.findOneAndUpdate({ _id: _id }, { exercises: foundUser.exercises }, { new: true })
+				.then((foundAndUpdatedUser) => {
+					res.json({
+						_id,
+						description,
+						duration,
+						date,
+						username,
+						date: utils.toFccDateFormat(
+							foundAndUpdatedUser.exercises[foundAndUpdatedUser.exercises.length - 1].date
+						),
+					});
+				})
+				.catch((error) => next(error));
+		})
+		.catch((error) => next(error));
+});
+
 const errorHandler = (error, request, response, next) => {
 	console.error(error.message);
 
@@ -52,7 +83,7 @@ const errorHandler = (error, request, response, next) => {
 		return response.status(400).json({ error: error.message });
 	}
 
-	next(error);
+	return response.status(400).json({ error: error.message });
 };
 
 app.use(errorHandler);
