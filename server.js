@@ -12,7 +12,7 @@ morgan.token("reqbody", (req) => {
 	return JSON.stringify(req.body);
 });
 
-app.use(express.urlencoded());
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
 app.use(morgan(":method :url :status :res[content-length] - :response-time ms :reqbody"));
@@ -45,10 +45,15 @@ app.get("/api/exercise/users", (req, res, next) => {
 
 // POST route to /api/exercise/add for adding a new user with username
 app.post("/api/exercise/add", (req, res, next) => {
-	const { _id } = req.body;
+	const _id = req.body.userId;
 	const { description } = req.body;
 	const { duration } = req.body;
-	const date = req.body.date || new Date();
+
+	let reqBodyDate;
+	if (req.body.date) {
+		reqBodyDate = new Date(req.body.date);
+	}
+	const date = reqBodyDate || new Date();
 
 	User.findById(_id)
 		.then((foundUser) => {
@@ -59,13 +64,12 @@ app.post("/api/exercise/add", (req, res, next) => {
 				.then((foundAndUpdatedUser) => {
 					res.json({
 						_id,
-						description,
-						duration,
-						date,
 						username,
 						date: utils.toFccDateFormat(
 							foundAndUpdatedUser.exercises[foundAndUpdatedUser.exercises.length - 1].date
 						),
+						duration: +duration,
+						description,
 					});
 				})
 				.catch((error) => next(error));
@@ -74,6 +78,7 @@ app.post("/api/exercise/add", (req, res, next) => {
 });
 
 const errorHandler = (error, request, response, next) => {
+	console.error(error);
 	console.error(error.message);
 
 	if (error.name === "CastError") {
