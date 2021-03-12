@@ -11,9 +11,10 @@ morgan.token("reqbody", (req) => {
 	return JSON.stringify(req.body);
 });
 
+app.use(express.json());
+app.use(cors());
 app.use(morgan(":method :url :status :res[content-length] - :response-time ms :reqbody"));
 
-app.use(cors());
 app.use(express.static("public"));
 
 app.get("/", (req, res) => {
@@ -21,7 +22,7 @@ app.get("/", (req, res) => {
 });
 
 // POST route to /api/exercise/new-user for adding a new user with username
-app.post("/api/persons", (req, res, next) => {
+app.post("/api/exercise/new-user", (req, res, next) => {
 	const { username } = req.body;
 
 	const newUser = new User({ username });
@@ -39,6 +40,8 @@ const errorHandler = (error, request, response, next) => {
 	if (error.name === "CastError") {
 		return response.status(400).send({ error: "invalid id format!" });
 	} else if (error.name === "ValidationError") {
+		return response.status(400).json({ error: error.message });
+	} else if (error.name === "MongoError") {
 		return response.status(400).json({ error: error.message });
 	}
 
