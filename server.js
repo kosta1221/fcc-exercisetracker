@@ -89,28 +89,30 @@ app.get("/api/exercise/log", (req, res, next) => {
 	if (from) from = new Date(from);
 	if (to) to = new Date(to);
 
-	console.log(userId);
-	console.log(from);
-	console.log(to);
-	console.log(limit);
-
 	User.findById(userId)
 		.then((foundUser) => {
 			const _id = foundUser.id;
 			const username = foundUser.username;
-			let log = foundUser.exercises;
+
+			let log = [...foundUser.exercises];
+			log.forEach((exercise) => {
+				exercise.date = utils.toFccDateFormat(exercise.date);
+			});
 
 			if (from && to) {
 				const logUnlimited = foundUser.exercises.filter(
 					(exercise) =>
 						exercise.date.getTime() > from.getTime() && exercise.date.getTime() < to.getTime()
 				);
-
-				log = [...logUnlimited];
+				logUnlimited.forEach((exercise) => {
+					exercise.date = utils.toFccDateFormat(exercise.date);
+				});
 
 				if (limit) {
 					log = logUnlimited.filter((exercise, index) => index < limit);
 				}
+
+				log = [...logUnlimited];
 			}
 
 			const count = log.length;
