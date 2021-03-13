@@ -38,12 +38,14 @@ app.post("/api/exercise/new-user", (req, res, next) => {
 
 // GET route to /api/exercise/users returns an array of all users. Each element in the array is an object containing a user's username and _id.
 app.get("/api/exercise/users", (req, res, next) => {
-	User.find({}).then((users) => {
-		res.status(200).json(users);
-	});
+	User.find({})
+		.select("-exercises")
+		.then((users) => {
+			res.status(200).json(users);
+		});
 });
 
-// POST route to /api/exercise/add for adding a new user with username
+// POST route to /api/exercise/add for adding an exercise to an exsiting user by his id
 app.post("/api/exercise/add", (req, res, next) => {
 	const _id = req.body.userId;
 	const { description } = req.body;
@@ -58,7 +60,7 @@ app.post("/api/exercise/add", (req, res, next) => {
 	User.findById(_id)
 		.then((foundUser) => {
 			const username = foundUser.username;
-			foundUser.exercises.push({ _id, description, duration, date, username });
+			foundUser.exercises.push({ description, duration, date });
 
 			User.findOneAndUpdate({ _id: _id }, { exercises: foundUser.exercises }, { new: true })
 				.then((foundAndUpdatedUser) => {
@@ -73,6 +75,22 @@ app.post("/api/exercise/add", (req, res, next) => {
 					});
 				})
 				.catch((error) => next(error));
+		})
+		.catch((error) => next(error));
+});
+
+// GET route to /api/exercise/log?userId=<userId> to retrieve a full exercise log of any user
+app.get("/api/exercise/log", (req, res, next) => {
+	const userId = req.query.userId;
+	console.log(userId);
+
+	User.findById(userId)
+		.then((foundUser) => {
+			const _id = foundUser.id;
+			const username = foundUser.username;
+			const log = foundUser.exercises;
+			const count = log.length;
+			res.json({ _id, username, count, log });
 		})
 		.catch((error) => next(error));
 });
