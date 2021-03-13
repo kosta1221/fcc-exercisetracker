@@ -5,7 +5,7 @@ const morgan = require("morgan");
 const app = express();
 const cors = require("cors");
 const User = require("./models/User");
-const mongoose = require("mongoose");
+const _ = require("lodash");
 const utils = require("./utils");
 
 morgan.token("reqbody", (req) => {
@@ -94,25 +94,27 @@ app.get("/api/exercise/log", (req, res, next) => {
 			const _id = foundUser.id;
 			const username = foundUser.username;
 
-			let log = [...foundUser.exercises];
+			let log = _.cloneDeep(foundUser.exercises);
 			log.forEach((exercise) => {
 				exercise.date = utils.toFccDateFormat(exercise.date);
 			});
 
 			if (from && to) {
+				console.log(foundUser.exercises);
 				const logUnlimited = foundUser.exercises.filter(
 					(exercise) =>
 						exercise.date.getTime() > from.getTime() && exercise.date.getTime() < to.getTime()
 				);
-				logUnlimited.forEach((exercise) => {
+				const logUnlimitedClone = _.cloneDeep(logUnlimited);
+				logUnlimitedClone.forEach((exercise) => {
 					exercise.date = utils.toFccDateFormat(exercise.date);
 				});
 
 				if (limit) {
-					log = logUnlimited.filter((exercise, index) => index < limit);
+					log = logUnlimitedClone.filter((exercise, index) => index < limit);
 				}
 
-				log = [...logUnlimited];
+				log = logUnlimitedClone;
 			}
 
 			const count = log.length;
