@@ -82,14 +82,39 @@ app.post("/api/exercise/add", (req, res, next) => {
 // GET route to /api/exercise/log?userId=<userId> to retrieve a full exercise log of any user
 app.get("/api/exercise/log", (req, res, next) => {
 	const userId = req.query.userId;
+	let from = req.query.from;
+	let to = req.query.to;
+	const limit = Number(req.query.limit);
+
+	if (from) from = new Date(from);
+	if (to) to = new Date(to);
+
 	console.log(userId);
+	console.log(from);
+	console.log(to);
+	console.log(limit);
 
 	User.findById(userId)
 		.then((foundUser) => {
 			const _id = foundUser.id;
 			const username = foundUser.username;
-			const log = foundUser.exercises;
+			let log = foundUser.exercises;
+
+			if (from && to) {
+				const logUnlimited = foundUser.exercises.filter(
+					(exercise) =>
+						exercise.date.getTime() > from.getTime() && exercise.date.getTime() < to.getTime()
+				);
+
+				log = [...logUnlimited];
+
+				if (limit) {
+					log = logUnlimited.filter((exercise, index) => index < limit);
+				}
+			}
+
 			const count = log.length;
+
 			res.json({ _id, username, count, log });
 		})
 		.catch((error) => next(error));
