@@ -95,6 +95,11 @@ app.get("/api/exercise/log", (req, res, next) => {
 			const username = foundUser.username;
 
 			let log = _.cloneDeep(foundUser.exercises);
+
+			if (limit) {
+				log = log.filter((exercise, index) => index < limit);
+			}
+
 			log.forEach((exercise) => {
 				exercise.date = utils.toFccDateFormat(exercise.date);
 			});
@@ -109,10 +114,6 @@ app.get("/api/exercise/log", (req, res, next) => {
 				logUnlimitedClone.forEach((exercise) => {
 					exercise.date = utils.toFccDateFormat(exercise.date);
 				});
-
-				if (limit) {
-					log = logUnlimitedClone.filter((exercise, index) => index < limit);
-				}
 
 				log = logUnlimitedClone;
 			}
